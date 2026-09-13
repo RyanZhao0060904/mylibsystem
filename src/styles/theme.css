@@ -1,0 +1,66 @@
+/* ============================================================
+   复古书香气主题
+   暖羊皮纸 + 墨色 + 赭石棕，标题用宋体衬线
+   ============================================================ */
+
+:root {
+  /* —— Element Plus 主色：赭石棕（按钮 / 链接 / 激活态统一暖棕） —— */
+  --el-color-primary: #8b5e3c;
+  --el-color-primary-light-3: #a88266;
+  --el-color-primary-light-5: #bda184;
+  --el-color-primary-light-7: #d2c0aa;
+  --el-color-primary-light-8: #ddd0be;
+  --el-color-primary-light-9: #e9e0d3;
+  --el-color-primary-dark-2: #6f4b30;
+
+  /* —— 背景：羊皮纸 —— */
+  --el-bg-color: #fdfaf3;
+  --el-bg-color-page: #f6f1e7;
+  --el-bg-color-overlay: #fdfaf3;
+  --el-fill-color-blank: #fdfaf3;
+
+  /* —— 文本：墨色 —— */
+  --el-text-color-primary: #3a3226;
+  --el-text-color-regular: #4d4335;
+  --el-text-color-secondary: #7a6f5c;
+  --el-text-color-placeholder: #b3a68f;
+
+  /* —— 边框：暖褐 —— */
+  --el-border-color: #e3d8c3;
+  --el-border-color-light: #ede4d1;
+  --el-border-color-lighter: #f1eadb;
+  --el-border-color-extra-light: #f6f0e4;
+
+  /* 圆角略收，更显古朴 */
+  --el-border-radius-base: 3px;
+}
+
+/* 全局：羊皮纸背景 + 墨色文字 */
+body {
+  background-color: #f6f1e7;
+  color: #3a3226;
+}
+
+/* 品牌 / 标题：宋体衬线，突出书卷气 */
+.layout-logo-text,
+.login-title,
+.el-card__header,
+.el-dialog__title {
+  font-family: 'Georgia', 'Times New Roman', 'STSong', 'Songti SC', 'Noto Serif SC', 'SimSun', serif;
+  letter-spacing: 0.5px;
+}
+
+/* 选中文本：浅赭 */
+::selection {
+  background: rgba(139, 94, 60, 0.22);
+}
+
+/* 滚动条：暖褐 */
+::-webkit-scrollbar-thumb {
+  background: #c7b899;
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #b09e7c;
+}
