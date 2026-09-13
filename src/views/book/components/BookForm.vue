@@ -2,6 +2,7 @@
 // computed 派生状态 / nextTick 等 DOM 更新 / reactive-ref 响应式 / watch 监听弹窗开关
 import { computed, nextTick, reactive, ref, watch } from 'vue'
 import type { FormInstance, FormRules } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { BOOK_CATEGORIES } from '@/constants'
 import type { BookItem } from '@/types'
 
@@ -94,18 +95,54 @@ function handleClose() {
   Object.assign(form, defaultForm())
 }
 
-// HTML5 FileReader 图片上传预览
-// 思路：不走真实上传接口，而是把选中图片读成 base64 字符串直接存进 form.cover；
-// 后端 mock 把 cover 当普通字符串存取，列表/详情页用 <img :src> 直接展示即可
+// 图片上传：读文件 → 压缩 → 转 base64 存进 form.cover。
+// 思路：不走真实上传接口，而是把封面图转成 base64 字符串直接存进 form.cover，
+// 后端 mock 把 cover 当普通字符串存取，列表/详情页用 <img :src> 直接展示即可。
+// 为什么这里要「压缩」：封面会随 mock 数据一起持久化到 localStorage，而 localStorage 只有约 5MB，
+// 原图 base64 动辄几百 KB，存不了几张就爆。所以用 canvas 把图缩到最长边 500px、以 JPEG 0.82
+// 质量重编码，单张压到几十 KB，既够展示又省空间。
 function handleFileChange(event: Event) {
   const input = event.target as HTMLInputElement
   // 取用户选中的第一个文件；用户取消选择时 files 为空或长度为 0
   const file = input.files?.[0]
   if (!file) return
+  // 兜底校验：input 的 accept 已限图片，但个别场景仍可能选到非图片文件，直接拦截并提示
+  if (!file.type.startsWith('image/')) {
+    ElMessage.warning('请选择图片文件')
+    input.value = ''
+    return
+  }
   const reader = new FileReader()
   // readAsDataURL 是异步的：读完后触发 onload，result 是 "data:image/...;base64,..." 字符串
   reader.onload = () => {
-    form.cover = reader.result as string
+    const dataUrl = reader.result as string
+    const img = new Image()
+    // 图片解码完成后才能拿到真实宽高并绘制到 canvas
+    img.onload = () => {
+      const MAX_W = 500 // 压缩目标：最长边不超过 500px（封面展示尺寸远小于此，足够清晰）
+      const scale = Math.min(1, MAX_W / img.width) // 只在图片过大时缩小，小图不放大
+      const w = Math.round(img.width * scale)
+      const h = Math.round(img.height * scale)
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      if (!ctx) {
+        // 极少数环境拿不到 2d 上下文时，退化为直接存原图，保证功能可用
+        form.cover = dataUrl
+        return
+      }
+      // 先铺白底：JPEG 不支持透明，避免透明 PNG 被压成黑底
+      ctx.fillStyle = '#fff'
+      ctx.fillRect(0, 0, w, h)
+      ctx.drawImage(img, 0, 0, w, h)
+      form.cover = canvas.toDataURL('image/jpeg', 0.82)
+    }
+    img.onerror = () => {
+      // 图片文件损坏无法解码时，退化为存原 base64（展示时也会失败，但至少不报错中断）
+      form.cover = dataUrl
+    }
+    img.src = dataUrl
   }
   reader.readAsDataURL(file)
   // 清空 input.value：这样下次再选同一张图，change 事件仍会触发（值没变化就不会触发）

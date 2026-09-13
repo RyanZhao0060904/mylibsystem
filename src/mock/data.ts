@@ -1,4 +1,5 @@
 import type { BookItem, BorrowRecord, OperationLog, ReaderItem, RoleItem } from '@/types'
+import { reactive, watch } from 'vue'
 
 // ==================== 文件说明 ====================
 // 本文件是整个 mock 后端的"内存数据库"：用一个普通对象 db 来模拟后端各张数据表。
@@ -23,7 +24,7 @@ export interface MockUser {
 /** 全局 mock 数据仓库（属性可整体重赋值，兼容 filter/增删改） */
 // 为什么用 const 声明还能增删改？—— db 本身是 const（引用不变），但它的数组属性会被"整体替换"
 // （例如 db.books = db.books.filter(...)），filter/增删改都生成新数组再赋回，所以属性可以被重新赋值。
-export const db = {
+export const db = reactive({
   // users 用户表：username 登录名、password 明文密码（仅 mock 演示用，真实后端会加密存储）、
   // role 为角色名（admin 超级管理员 / lib 图书馆管理员），createTime 创建时间。
   users: [
@@ -118,4 +119,36 @@ export const db = {
   readerIdSeed: 100,
   userIdSeed: 100,
   borrowIdSeed: 100,
+})
+
+// ==================== localStorage 持久化 ====================
+// 上面的 db 只存在于内存里，一刷新就回到种子数据。为了让「新增图书/封面、借还记录」等
+// 在刷新后仍保留，这里把 db 序列化存进浏览器 localStorage。
+// 注意：localStorage 是「按浏览器 + 按网站域名」隔离的，所以只在同一台电脑的同一个浏览器里有效，
+// 换设备 / 换浏览器 / 清空浏览器数据后依然会丢（要跨设备共享就得接真实后端 + 数据库）。
+// 实现思路：
+//   1. 用 reactive 包裹 db，让内部任何增删改都能被 Vue 感知；
+//   2. 模块加载时先从 localStorage 读上次保存的数据回填（没有就用种子数据）；
+//   3. 用 watch(deep) 监听 db 的任意变化，一变就写回 localStorage。
+const STORAGE_KEY = 'book-manage-sys:db'
+
+// 读本地数据回填（放在 watch 之前，避免把刚读回来的数据又原样写一遍）
+try {
+  const saved = localStorage.getItem(STORAGE_KEY)
+  if (saved) Object.assign(db, JSON.parse(saved))
+} catch {
+  // localStorage 不可用（如隐私模式）或数据损坏时，静默回退到种子数据，不阻断启动
 }
+
+// 监听 db 的任意变化（含嵌套数组/对象、id 种子自增），自动持久化
+watch(
+  db,
+  () => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(db))
+    } catch {
+      // 最常见是超出 localStorage 约 5MB 配额（base64 封面过大），此时静默忽略避免崩溃
+    }
+  },
+  { deep: true },
+)
