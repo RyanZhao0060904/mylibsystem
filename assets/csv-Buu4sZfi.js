@@ -1,0 +1,3 @@
+import{n as e,t}from"./request-BRd37fEy.js";function n(e){return t(`/log/list`,e)}function r(t){return e(`/log/record`,t)}function i(e){return/[",\n]/.test(e)?`"`+e.replace(/"/g,`""`)+`"`:e}function a(e,t,n){let r=t.map(e=>i(e.title)).join(`,`),a=n.map(e=>t.map(t=>{let n=typeof t.key==`function`?t.key(e):e[t.key];return i(String(n??``))}).join(`,`)).join(`
+`),o=new Blob([`﻿`+r+`
+`+a],{type:`text/csv;charset=utf-8;`}),s=URL.createObjectURL(o),c=document.createElement(`a`);c.href=s,c.download=`${e}.csv`,document.body.appendChild(c),c.click(),document.body.removeChild(c),URL.revokeObjectURL(s)}export{n,r,a as t};

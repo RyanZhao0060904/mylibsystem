@@ -1,1 +1,0 @@
-import{n as e,t}from"./request-DflBpTYj.js";function n(e){return t(`/reader/list`,e)}function r(t){return e(`/reader/add`,t)}function i(t){return e(`/reader/edit`,t)}function a(t){return e(`/reader/delete`,{id:t})}export{n as i,a as n,i as r,r as t};
