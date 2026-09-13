@@ -1,0 +1,1 @@
+import{n as e,t}from"./request-DflBpTYj.js";function n(e){return t(`/borrow/list`,e)}function r(t){return e(`/borrow/add`,t)}function i(t){return e(`/borrow/edit`,{id:t})}function a(t,n){return e(`/borrow/renew`,{id:t,days:n})}function o(t){return e(`/borrow/delete`,{id:t})}export{i as a,a as i,o as n,n as r,r as t};
